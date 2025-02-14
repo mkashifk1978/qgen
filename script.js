@@ -1,29 +1,8 @@
-// script.js
-let itemCount = 1;
-
-function addItem() {
-    itemCount++;
-    const itemsContainer = document.getElementById('itemsContainer');
-    const newItem = document.createElement('div');
-    newItem.className = 'item';
-    newItem.innerHTML = `
-        <h3>Item ${itemCount}</h3>
-        <label for="itemDetail${itemCount}">Item Detail:</label>
-        <input type="text" id="itemDetail${itemCount}" name="itemDetail${itemCount}" required>
-
-        <label for="unitPrice${itemCount}">Unit Price:</label>
-        <input type="number" id="unitPrice${itemCount}" name="unitPrice${itemCount}" required>
-
-        <label for="quantity${itemCount}">Quantity:</label>
-        <input type="number" id="quantity${itemCount}" name="quantity${itemCount}" required>
-    `;
-    itemsContainer.appendChild(newItem);
-}
-
 function generateQuotation() {
     const companyName = document.getElementById('companyName').value;
     const date = document.getElementById('date').value;
     const contactPerson = document.getElementById('contactPerson').value;
+    const quotationNumber = document.getElementById('quotationNumber').value;
     const taxPercentage = parseFloat(document.getElementById('taxPercentage').value);
 
     const items = [];
@@ -52,53 +31,54 @@ function generateQuotation() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // Add Kashif Enterprises Banner
-    doc.setFontSize(24);
-    doc.setTextColor(40, 40, 40);
-    doc.text("Kashif Enterprises", 10, 20);
+    // Load the image
+    const img = new Image();
+    img.src = 'https://raw.githubusercontent.com/mkashifk1978/qgen/main/logo.png'; // Replace with your image URL
 
-    // Add Company Details
-    doc.setFontSize(12);
-    doc.text(`Company Name: ${companyName}`, 10, 30);
-    doc.text(`Date: ${date}`, 10, 40);
-    doc.text(`Contact Person: ${contactPerson}`, 10, 50);
+    // Add image to the PDF
+    img.onload = function () {
+        // Add the image to the header
+        doc.addImage(img, 'PNG', 10, 10, 50, 20); // Adjust dimensions (x, y, width, height) as needed
 
-    // Add Table Header
-    const headers = [["Item Detail", "Unit Price", "Quantity", "Final Rate"]];
-    const data = items.map(item => [
-        item.itemDetail,
-        `$${item.unitPrice.toFixed(2)}`,
-        item.quantity,
-        `$${item.finalRate.toFixed(2)}`,
-    ]);
+        // Add Quotation Number
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Quotation Number: ${quotationNumber}`, 70, 20); // Adjust position (x, y) as needed
 
-    // Add Total, Tax, and Grand Total
-    data.push(["Total", "", "", `$${totalAmount.toFixed(2)}`]);
-    data.push(["Tax Deduction", "", "", `$${taxAmount.toFixed(2)}`]);
-    data.push(["Grand Total", "", "", `$${grandTotal.toFixed(2)}`]);
+        // Add Company Details
+        doc.setFontSize(12);
+        doc.text(`Company Name: ${companyName}`, 10, 40);
+        doc.text(`Date: ${date}`, 10, 50);
+        doc.text(`Contact Person: ${contactPerson}`, 10, 60);
 
-    // Generate Table
-    doc.autoTable({
-        startY: 60,
-        head: headers,
-        body: data,
-        theme: 'grid',
-    });
+        // Add Table Header
+        const headers = [["Item Detail", "Unit Price", "Quantity", "Final Rate"]];
+        const data = items.map(item => [
+            item.itemDetail,
+            `$${item.unitPrice.toFixed(2)}`,
+            item.quantity,
+            `$${item.finalRate.toFixed(2)}`,
+        ]);
 
-    // Save PDF
-    doc.save('quotation.pdf');
+        // Add Total, Tax, and Grand Total
+        data.push(["Total", "", "", `$${totalAmount.toFixed(2)}`]);
+        data.push(["Tax Deduction", "", "", `$${taxAmount.toFixed(2)}`]);
+        data.push(["Grand Total", "", "", `$${grandTotal.toFixed(2)}`]);
+
+        // Generate Table
+        doc.autoTable({
+            startY: 70, // Adjusted startY to accommodate the image and header
+            head: headers,
+            body: data,
+            theme: 'grid',
+        });
+
+        // Save PDF
+        doc.save(`quotation_${quotationNumber}.pdf`);
+    };
+
+    // Handle image loading errors
+    img.onerror = function () {
+        alert('Failed to load the image. Please check the image URL.');
+    };
 }
-
-// Include jsPDF and autoTable plugin
-function loadScript(src, callback) {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = callback;
-    document.head.appendChild(script);
-}
-
-loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', () => {
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js', () => {
-        console.log('jsPDF and autoTable loaded successfully!');
-    });
-});
